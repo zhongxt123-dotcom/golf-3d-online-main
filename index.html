@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中国高尔夫地图</title>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="dns-prefetch" href="//unpkg.com">
+  <link rel="dns-prefetch" href="//threejs.org">
+  <link rel="dns-prefetch" href="//webst01.is.autonavi.com">
+  <link rel="dns-prefetch" href="//webrd01.is.autonavi.com">
+  <link rel="stylesheet" href="./style.css?v=mobile-marker-bag-20260522">
+</head>
+<body>
+  <div id="title">中国高尔夫球场地图</div>
+  <div id="app-toolbar">
+    <button id="profile-reset" type="button">重选球风</button>
+    <button id="locate-nearby" type="button">附近球场</button>
+    <button id="overview-open" type="button">中国球场全览</button>
+  </div>
+  <div id="hint">拖拽浏览 &nbsp;|&nbsp; 滚轮缩放 &nbsp;|&nbsp; 点击光点查看详情</div>
+  <div id="transition-mask">
+    <div id="transition-copy">正在进入球场</div>
+  </div>
+  <div id="page-error-layer" class="hidden" role="alert" aria-live="assertive">
+    <div id="page-error-panel">
+      <strong id="page-error-title">页面资源加载异常</strong>
+      <p id="page-error-message">部分资源加载失败，请检查网络后重试。</p>
+      <div id="page-error-actions">
+        <button id="page-error-reload" type="button">重新加载</button>
+        <button id="page-error-close" type="button">继续浏览</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 用户档案初始化弹窗 ──────────────────────── -->
+  <div id="profile-modal">
+    <div id="profile-panel">
+      <div id="profile-header">
+        <div id="profile-icon">&#9918;</div>
+        <h2>专属高尔夫档案</h2>
+        <p>请选择您的偏好，为您生成专属数字球童</p>
+      </div>
+
+      <div id="profile-questions">
+        <div class="pq-group">
+          <div class="pq-label">打球策略</div>
+          <div class="pq-options">
+            <label class="pq-opt"><input type="radio" name="strategy" value="进取型/重炮手"><span>进取型/重炮手</span></label>
+            <label class="pq-opt"><input type="radio" name="strategy" value="稳健型/控球派"><span>稳健型/控球派</span></label>
+          </div>
+        </div>
+
+        <div class="pq-group">
+          <div class="pq-label">地形偏好</div>
+          <div class="pq-options">
+            <label class="pq-opt"><input type="radio" name="terrain" value="沙坑挑战者"><span>沙坑挑战者</span></label>
+            <label class="pq-opt"><input type="radio" name="terrain" value="水障恐慌者"><span>水障恐慌者</span></label>
+            <label class="pq-opt"><input type="radio" name="terrain" value="山地球场爱好者"><span>山地球场爱好者</span></label>
+          </div>
+        </div>
+
+        <div class="pq-group">
+          <div class="pq-label">体能状况</div>
+          <div class="pq-options">
+            <label class="pq-opt"><input type="radio" name="environment" value="怕热星人"><span>怕热星人</span></label>
+            <label class="pq-opt"><input type="radio" name="environment" value="抗风能力弱"><span>抗风能力弱</span></label>
+            <label class="pq-opt"><input type="radio" name="environment" value="体能充沛"><span>体能充沛</span></label>
+          </div>
+        </div>
+
+        <div class="pq-group">
+          <div class="pq-label">当前水平</div>
+          <div class="pq-options">
+            <label class="pq-opt"><input type="radio" name="skill" value="新手上路"><span>新手上路</span></label>
+            <label class="pq-opt"><input type="radio" name="skill" value="业余高手"><span>业余高手</span></label>
+            <label class="pq-opt"><input type="radio" name="skill" value="职业水准"><span>职业水准</span></label>
+          </div>
+        </div>
+
+        <div class="pq-extra-grid">
+          <label>
+            <span>平均杆数</span>
+            <select id="profile-score">
+              <option value="未填写">暂不填写</option>
+              <option value="100杆以上">100杆以上</option>
+              <option value="90-100杆">90-100杆</option>
+              <option value="80-90杆">80-90杆</option>
+              <option value="80杆以内">80杆以内</option>
+            </select>
+          </label>
+          <label>
+            <span>开球距离</span>
+            <select id="profile-drive">
+              <option value="未填写">暂不填写</option>
+              <option value="180码以内">180码以内</option>
+              <option value="180-220码">180-220码</option>
+              <option value="220-260码">220-260码</option>
+              <option value="260码以上">260码以上</option>
+            </select>
+          </label>
+          <label>
+            <span>常见失误</span>
+            <select id="profile-miss">
+              <option value="未填写">暂不填写</option>
+              <option value="右曲/右推">右曲/右推</option>
+              <option value="左曲/左拉">左曲/左拉</option>
+              <option value="距离不稳定">距离不稳定</option>
+              <option value="短杆薄弱">短杆薄弱</option>
+              <option value="推杆不稳定">推杆不稳定</option>
+            </select>
+          </label>
+          <label>
+            <span>本次目标</span>
+            <input id="profile-goal" type="text" maxlength="40" placeholder="例如：稳稳破百、少丢球、练短杆">
+          </label>
+        </div>
+      </div>
+
+      <details id="profile-bag-panel">
+        <summary>
+          <span>我的球包</span>
+          <em id="profile-bag-status">估算中</em>
+        </summary>
+        <div class="profile-bag-grid">
+          <label><span>Driver</span><input data-profile-bag-club="driver" type="number" min="80" max="360" inputmode="numeric" placeholder="230"></label>
+          <label><span>3W</span><input data-profile-bag-club="wood3" type="number" min="70" max="330" inputmode="numeric" placeholder="205"></label>
+          <label><span>5W</span><input data-profile-bag-club="wood5" type="number" min="70" max="310" inputmode="numeric" placeholder="190"></label>
+          <label><span>Hybrid</span><input data-profile-bag-club="hybrid" type="number" min="60" max="290" inputmode="numeric" placeholder="175"></label>
+          <label><span>5i</span><input data-profile-bag-club="i5" type="number" min="50" max="260" inputmode="numeric" placeholder="165"></label>
+          <label><span>6i</span><input data-profile-bag-club="i6" type="number" min="50" max="240" inputmode="numeric" placeholder="155"></label>
+          <label><span>7i</span><input data-profile-bag-club="i7" type="number" min="40" max="220" inputmode="numeric" placeholder="145"></label>
+          <label><span>8i</span><input data-profile-bag-club="i8" type="number" min="40" max="210" inputmode="numeric" placeholder="135"></label>
+          <label><span>9i</span><input data-profile-bag-club="i9" type="number" min="30" max="190" inputmode="numeric" placeholder="125"></label>
+          <label><span>PW</span><input data-profile-bag-club="pw" type="number" min="20" max="170" inputmode="numeric" placeholder="110"></label>
+          <label><span>AW</span><input data-profile-bag-club="aw" type="number" min="20" max="150" inputmode="numeric" placeholder="95"></label>
+          <label><span>SW</span><input data-profile-bag-club="sw" type="number" min="10" max="130" inputmode="numeric" placeholder="75"></label>
+          <label class="putter-note"><span>Putter 备注</span><input data-profile-bag-club="putter" type="text" maxlength="50" placeholder="例如：长推容易短"></label>
+        </div>
+        <div class="profile-bag-actions">
+          <button id="profile-bag-save" type="button">保存球包</button>
+          <button id="profile-bag-default" type="button">恢复默认</button>
+          <button id="profile-bag-reset" type="button">清空球包</button>
+        </div>
+        <p class="profile-bag-note">未保存时，数字球童会按你的开球距离生成估算球包；保存后刷新页面仍会保留。</p>
+      </details>
+
+      <button id="profile-submit" disabled>生成专属数字球童</button>
+      <p id="profile-hint">✨ 球童生成后，系统将为您进行全域扫描。地图上亮起的霓虹光点，即为您匹配度达 65% 及以上的推荐球场。</p>
+    </div>
+  </div>
+
+  <aside id="list-panel" aria-hidden="true">
+    <div id="list-header">
+      <div>
+        <h2 id="list-title">中国球场全览</h2>
+        <p id="list-subtitle"></p>
+      </div>
+      <button id="list-close" type="button">&times;</button>
+    </div>
+    <div id="list-tools">
+      <label class="list-search">
+        <span>搜索</span>
+        <input id="list-search" type="search" placeholder="球场名 / 省份 / 城市 / 山地">
+      </label>
+      <div id="list-nearby-tools" hidden>
+        <div id="nearby-status-cards">
+          <span id="nearby-status">定位状态：未开启</span>
+          <span id="nearby-count">最近球场：--</span>
+          <span id="nearby-distance">最近距离：--</span>
+        </div>
+        <div class="nearby-range-row" aria-label="附近球场范围">
+          <button class="active" type="button" data-nearby-range="100">100km 内</button>
+          <button type="button" data-nearby-range="300">300km 内</button>
+          <button type="button" data-nearby-range="all">全国</button>
+        </div>
+        <label class="nearby-city-select">
+          <span>手动城市</span>
+          <select id="nearby-city-select"></select>
+        </label>
+      </div>
+      <div class="list-filter-grid">
+        <label>
+          <span>省份 / 区域</span>
+          <select id="list-province-filter"></select>
+        </label>
+        <label>
+          <span>球场类型</span>
+          <select id="list-type-filter"></select>
+        </label>
+        <label>
+          <span>难度</span>
+          <select id="list-difficulty-filter"></select>
+        </label>
+        <label>
+          <span>排序</span>
+          <select id="list-sort-filter">
+            <option value="recommend">综合推荐</option>
+            <option value="distance">距离最近</option>
+            <option value="match">匹配度最高</option>
+            <option value="difficultyAsc">难度从低到高</option>
+            <option value="difficultyDesc">难度从高到低</option>
+          </select>
+        </label>
+      </div>
+      <div class="list-toggle-row">
+        <label><input id="list-suitable-filter" type="checkbox"> 适合我</label>
+        <label><input id="list-video-filter" type="checkbox"> 有实景视频</label>
+        <label><input id="list-model-filter" type="checkbox"> 独立 3D 模型</label>
+      </div>
+      <p id="list-filter-note"></p>
+    </div>
+    <div id="list-content"></div>
+  </aside>
+
+  <!-- ─── 加载进度条 ──────────────────────────────── -->
+  <div id="loading-screen">
+    <div id="loading-content">
+      <div id="loading-icon">⛳️</div>
+      <div id="loading-ring"></div>
+      <p id="loading-text">地图加载中...</p>
+      <p id="loading-percent">请稍候</p>
+    </div>
+  </div>
+
+  <section id="map-detail-layer" aria-hidden="true">
+    <canvas id="detail-map-canvas"></canvas>
+    <div id="map-detail-head">
+      <div>
+        <h2 id="map-detail-title">中国高尔夫局部地图</h2>
+        <p id="map-detail-meta">Ctrl + 拖动平移，滚轮缩放，底图按地图瓦片高清刷新</p>
+      </div>
+      <div id="map-detail-actions">
+        <button id="map-detail-reset" type="button">复位</button>
+        <button id="map-detail-close" type="button">返回地球</button>
+      </div>
+    </div>
+    <div id="map-provider-tools" aria-label="地图底图切换">
+      <button class="active" type="button" data-map-provider="amapSatellite">高德卫星</button>
+      <button type="button" data-map-provider="amapRoad">高德路网</button>
+      <button type="button" data-map-provider="osm">标准地图</button>
+    </div>
+    <aside id="map-region-panel" aria-hidden="true">
+      <div id="map-region-head">
+        <div>
+          <strong id="map-region-title">区域详情</strong>
+          <span id="map-region-meta">选择地图聚合点查看球场</span>
+        </div>
+        <button id="map-region-close" type="button">&times;</button>
+      </div>
+      <div id="map-region-content"></div>
+    </aside>
+    <div id="map-detail-scale">高精度刷新</div>
+  </section>
+
+  <div id="overlay">
+    <div id="model-panel">
+      <div id="model-tools">
+        <button id="model-terrain-toggle" class="active" type="button">实景地形</button>
+        <button id="model-generic-toggle" type="button">3D模型</button>
+        <button id="model-rotate-toggle" type="button">自动环绕：开</button>
+        <label id="model-speed-control">
+          <span>旋转速度</span>
+          <input id="model-rotate-speed" type="range" min="0" max="1.2" step="0.05" value="0.35">
+        </label>
+      </div>
+      <canvas id="model-canvas"></canvas>
+      <div id="photo-detail" aria-hidden="true">
+        <img id="photo-detail-image" alt="3D 近景快照" />
+        <video id="photo-detail-video" playsinline muted loop controls preload="metadata"></video>
+        <div id="photo-detail-caption">
+          <strong id="photo-detail-title"></strong>
+          <span id="photo-detail-meta"></span>
+        </div>
+        <button id="photo-detail-close" type="button">返回 3D</button>
+      </div>
+      <div id="model-label"></div>
+    </div>
+
+    <div id="card">
+      <button id="card-close">&times;</button>
+
+      <div id="sb-info">
+        <h2 id="card-title"></h2>
+        <p id="card-desc"></p>
+        <div id="course-info-grid">
+          <div>
+            <span>地形图</span>
+            <strong id="course-terrain"></strong>
+          </div>
+          <div>
+            <span>周围环境</span>
+            <strong id="course-environment"></strong>
+          </div>
+          <div>
+            <span>球场信息</span>
+            <strong id="course-summary"></strong>
+          </div>
+        </div>
+        <div id="weather-risk-card" hidden>
+          <div>
+            <span>天气与打球风险</span>
+            <strong id="weather-risk-summary">正在准备天气风险</strong>
+          </div>
+          <p id="weather-risk-detail"></p>
+        </div>
+        <div id="course-tabs" role="tablist" aria-label="球场资料">
+          <button class="course-tab active" type="button" data-course-tab="terrain">地形图</button>
+          <button class="course-tab" type="button" data-course-tab="environment">周围环境</button>
+          <button class="course-tab" type="button" data-course-tab="info">球场信息</button>
+          <button class="course-tab" type="button" data-course-tab="realview">实景地图</button>
+        </div>
+        <div id="course-tab-panel" aria-live="polite"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div id="sb-caddy">
+        <div id="caddy-avatar">
+          <div id="caddy-ring"></div>
+          <img src="./assets/caddy_photo.png" alt="数字球童" />
+        </div>
+        <div id="caddy-bubble">
+          <div id="bubble-accent"></div>
+          <div id="caddy-text"></div>
+        </div>
+      </div>
+      <div id="caddy-controls">
+        <div id="caddy-modes">
+          <button class="caddy-mode active" type="button" data-caddy-mode="strategy">球场攻略</button>
+          <button class="caddy-mode" type="button" data-caddy-mode="club">选杆建议</button>
+          <button class="caddy-mode" type="button" data-caddy-mode="fix">失误修正</button>
+          <button class="caddy-mode" type="button" data-caddy-mode="training">训练计划</button>
+          <button class="caddy-mode" type="button" data-caddy-mode="routine">赛前清单</button>
+          <button class="caddy-mode" type="button" data-caddy-mode="mental">心理球童</button>
+          <button class="caddy-mode" type="button" data-caddy-mode="bag">球包配置</button>
+        </div>
+        <div id="caddy-runtime-status" aria-live="polite">当前模式：基础模式</div>
+        <textarea id="caddy-note" maxlength="180" placeholder="补充现场条件：风向、果岭速度、当天身体状态、球位、常见失误等"></textarea>
+        <details id="caddy-bag-panel">
+          <summary>
+            <span>我的球包</span>
+            <em id="caddy-bag-status">未保存</em>
+          </summary>
+          <div id="caddy-bag-grid">
+            <label><span>Driver</span><input data-bag-club="driver" type="number" min="80" max="360" inputmode="numeric" placeholder="230"></label>
+            <label><span>3W</span><input data-bag-club="wood3" type="number" min="70" max="330" inputmode="numeric" placeholder="205"></label>
+            <label><span>5W</span><input data-bag-club="wood5" type="number" min="70" max="310" inputmode="numeric" placeholder="190"></label>
+            <label><span>Hybrid</span><input data-bag-club="hybrid" type="number" min="60" max="290" inputmode="numeric" placeholder="175"></label>
+            <label><span>5i</span><input data-bag-club="i5" type="number" min="50" max="260" inputmode="numeric" placeholder="165"></label>
+            <label><span>6i</span><input data-bag-club="i6" type="number" min="50" max="240" inputmode="numeric" placeholder="155"></label>
+            <label><span>7i</span><input data-bag-club="i7" type="number" min="40" max="220" inputmode="numeric" placeholder="145"></label>
+            <label><span>8i</span><input data-bag-club="i8" type="number" min="40" max="210" inputmode="numeric" placeholder="135"></label>
+            <label><span>9i</span><input data-bag-club="i9" type="number" min="30" max="190" inputmode="numeric" placeholder="125"></label>
+            <label><span>PW</span><input data-bag-club="pw" type="number" min="20" max="170" inputmode="numeric" placeholder="110"></label>
+            <label><span>AW</span><input data-bag-club="aw" type="number" min="20" max="150" inputmode="numeric" placeholder="95"></label>
+            <label><span>SW</span><input data-bag-club="sw" type="number" min="10" max="130" inputmode="numeric" placeholder="75"></label>
+            <label class="putter-note"><span>Putter 备注</span><input data-bag-club="putter" type="text" maxlength="50" placeholder="例如：长推容易短"></label>
+          </div>
+          <div id="caddy-bag-actions">
+            <button id="caddy-bag-save" type="button">保存球包</button>
+            <button id="caddy-bag-default" type="button">恢复默认</button>
+            <button id="caddy-bag-reset" type="button">清空</button>
+          </div>
+          <p class="profile-bag-note">未保存时使用估算球包；保存真实距离后，选杆建议会按你的常用码数调整。</p>
+        </details>
+        <div id="caddy-action-row">
+          <button id="caddy-ask" type="button">重新分析</button>
+          <button id="caddy-copy" type="button">复制建议</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script>
+    (function () {
+      const layerId = "page-error-layer";
+      window.showPageError = function (title, message, options = {}) {
+        const layer = document.getElementById(layerId);
+        const titleEl = document.getElementById("page-error-title");
+        const messageEl = document.getElementById("page-error-message");
+        if (!layer || !titleEl || !messageEl) {
+          console.error(title, message);
+          return;
+        }
+        titleEl.textContent = title || "页面资源加载异常";
+        messageEl.textContent = message || "部分资源加载失败，请检查网络后重试。";
+        layer.classList.remove("hidden");
+        layer.classList.toggle("fatal", Boolean(options.fatal));
+      };
+
+      window.addEventListener("error", (event) => {
+        const target = event.target;
+        if (target && target !== window && ["SCRIPT", "LINK", "IMG", "VIDEO"].includes(target.tagName)) {
+          const url = target.currentSrc || target.href || target.src || "未知资源";
+          window.showPageError("静态资源加载失败", `资源没有成功加载：${url}。如果在线上访问，请确认 GitHub Pages 已部署完整 assets 目录。`);
+        }
+      }, true);
+
+      window.addEventListener("unhandledrejection", (event) => {
+        const reason = String(event.reason?.message || event.reason || "");
+        if (reason.includes("Failed to fetch dynamically imported module") || reason.includes("Importing a module script failed")) {
+          window.showPageError("Three.js 或主程序加载失败", "页面主模块没有成功加载。请检查网络是否能访问 unpkg.com，或稍后刷新 GitHub Pages 页面。", { fatal: true });
+        }
+      });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-error-reload")?.addEventListener("click", () => window.location.reload());
+        document.getElementById("page-error-close")?.addEventListener("click", () => {
+          document.getElementById(layerId)?.classList.add("hidden");
+        });
+      });
+    })();
+
+    window.GOLF_MAP_CONFIG = {
+      mapTileProvider: "amapSatellite",
+      amapKey: "4e6c55d6546172d8e63b0238d5b7b78a",
+      amapSecurityJsCode: ""
+    };
+  </script>
+  <script type="module">
+    import("./main.js?v=mobile-marker-bag-20260522").catch((error) => {
+      console.error(error);
+      const detail = error?.message ? ` 错误信息：${error.message}` : "";
+      window.showPageError?.(
+        "Three.js 或主程序加载失败",
+        `页面依赖 Three.js CDN 和本地 main.js。请确认网络可访问 unpkg.com，并确认 GitHub Pages 已上传 index.html、main.js、locations.js、style.css 和 assets 目录。${detail}`,
+        { fatal: true }
+      );
+    });
+  </script>
+</body>
+</html>
