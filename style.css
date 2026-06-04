@@ -1611,11 +1611,11 @@ body.overlay-open #hint {
 }
 
 .caddy-advice-card {
-  margin: 0 0 9px;
-  padding: 10px 11px;
-  border: 1px solid rgba(120, 200, 255, 0.12);
-  border-radius: 8px;
-  background: rgba(4, 14, 24, 0.22);
+  margin: 0 0 0.2px;
+  padding: 1px 1px;
+  border: 1px solid rgba(120, 200, 255, 0.1);
+  border-radius: 6px;
+  background: rgba(4, 14, 24, 0.18);
 }
 
 .caddy-advice-card:last-child {
@@ -1624,30 +1624,32 @@ body.overlay-open #hint {
 
 .caddy-advice-card strong {
   display: block;
-  margin-bottom: 5px;
+  margin: 0 0 0.5px;
   color: rgba(118, 238, 218, 0.92);
   font-size: 12px;
   font-weight: 700;
+  line-height: 1.12;
 }
 
 .caddy-advice-card p {
   margin: 0;
   color: #b8e8f8;
   font-size: 14px;
-  line-height: 1.68;
+  line-height: 1.18;
   white-space: pre-line;
 }
 
 .caddy-advice-card.loading {
-  border-color: rgba(120, 220, 255, 0.2);
+  border-color: rgba(120, 220, 255, 0.18);
 }
 
 .caddy-source {
   display: block;
-  margin-top: 8px;
+  margin-top: 0.2px;
+  padding: 1px 1px;
   color: rgba(255, 226, 160, 0.74);
   font-size: 11px;
-  line-height: 1.45;
+  line-height: 1.15;
 }
 
 #caddy-controls {

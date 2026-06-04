@@ -40,7 +40,15 @@
       "PowerShell(node \"C:\\\\Users\\\\小涛\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\serve-golf.mjs\")",
       "PowerShell(node -e \"import\\('./locations.js'\\).then\\(\\({golfLocations}\\)=>{const bad=golfLocations.filter\\(x=>/\\(高尔夫|球会|球场|俱乐部|乡村俱乐部\\)/.test\\(x.name\\)\\); console.log\\('bad_names=' + bad.length\\); bad.slice\\(0,20\\).forEach\\(x=>console.log\\(x.name\\)\\);}\\)\")",
       "PowerShell(node --check src/app.js)",
-      "PowerShell(node -e \"import\\('./locations.js'\\).then\\(\\({golfLocations}\\)=>{const missing=golfLocations.filter\\(x=>!x.grassType||!x.greenSpeed||x.grassType==='待确认'||x.greenSpeed==='待确认'\\); console.log\\('missing_course_info=' + missing.length\\); console.log\\(golfLocations[0].name + ' ' + golfLocations[0].grassType + ' ' + golfLocations[0].greenSpeed\\);}\\)\")"
+      "PowerShell(node -e \"import\\('./locations.js'\\).then\\(\\({golfLocations}\\)=>{const missing=golfLocations.filter\\(x=>!x.grassType||!x.greenSpeed||x.grassType==='待确认'||x.greenSpeed==='待确认'\\); console.log\\('missing_course_info=' + missing.length\\); console.log\\(golfLocations[0].name + ' ' + golfLocations[0].grassType + ' ' + golfLocations[0].greenSpeed\\);}\\)\")",
+      "Bash(apply_patch *)",
+      "PowerShell(Start-Process -FilePath \"C:\\\\Users\\\\小涛\\\\Desktop\\\\golf-3d-online-main\\\\index.html\")",
+      "PowerShell(python --version)",
+      "PowerShell(node --version)",
+      "PowerShell(python3 --version)",
+      "PowerShell(py *)",
+      "Bash(node *)",
+      "PowerShell(Start-Process \"http://127.0.0.1:5173/\")"
     ]
   }
 }

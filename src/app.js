@@ -118,7 +118,7 @@ export function initGolfApp(moduleRegistry = {}) {
   function getCourseDisplayName(loc, suffix = "高尔夫球场") {
     const base = typeof loc === "string" ? loc : loc?.name;
     if (!base) return suffix;
-    return `${base}.${suffix}`;
+    return `${base}·${suffix}`;
   }
 
   function hideTransition() {
@@ -4237,15 +4237,24 @@ export function initGolfApp(moduleRegistry = {}) {
     }
   }
 
+  function resetCoursePanelScroll() {
+    const reset = () => {
+      overlay?.scrollTo?.({ top: 0, behavior: "auto" });
+      if (overlay) overlay.scrollTop = 0;
+      cardPanel?.scrollTo?.({ top: 0, behavior: "auto" });
+      if (cardPanel) cardPanel.scrollTop = 0;
+      courseTabPanel?.scrollTo?.({ top: 0, behavior: "auto" });
+      if (courseTabPanel) courseTabPanel.scrollTop = 0;
+      caddyBubble?.scrollTo?.({ top: 0, behavior: "auto" });
+      if (caddyBubble) caddyBubble.scrollTop = 0;
+    };
+    reset();
+    requestAnimationFrame(reset);
+    requestAnimationFrame(() => requestAnimationFrame(reset));
+  }
+
   function scrollCaddyResultIntoView() {
-    if (!cardPanel || !caddyBubble) return;
-    const cardRect = cardPanel.getBoundingClientRect();
-    const bubbleRect = caddyBubble.getBoundingClientRect();
-    const targetTop = Math.max(0, cardPanel.scrollTop + bubbleRect.top - cardRect.top - 18);
-    cardPanel.scrollTo({
-      top: targetTop,
-      behavior: prefersReducedMotion ? "auto" : "smooth",
-    });
+    if (selectedCourseIndex !== null) resetCoursePanelScroll();
   }
   
   function renderCourseTab(tabName = "terrain") {
@@ -4413,6 +4422,7 @@ export function initGolfApp(moduleRegistry = {}) {
     listPanel.setAttribute("aria-hidden", "true");
     overlay.classList.add("visible");
     document.body.classList.add("overlay-open");
+    resetCoursePanelScroll();
     modelRotationEnabled = true;
     syncModelRotationMode();
     showCourseTerrainMode();
